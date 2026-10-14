@@ -1,0 +1,541 @@
+<!doctype html>
+<html lang="en">
+<head>
+	<meta charset="utf-8">
+	<meta name="viewport" content="width=device-width, initial-scale=1">
+	<meta name="theme-color" content="#eaf3ef">
+	<title>Daymark - Today's list</title>
+	<style>
+		:root {
+			color-scheme: light;
+			--ink: #183b35;
+			--muted: #71837e;
+			--line: #dce7e2;
+			--paper: #ffffff;
+			--wash: #eaf3ef;
+			--accent: #e46e4d;
+			--accent-dark: #bd5035;
+			--mint: #d6e9df;
+			--shadow: 0 22px 60px rgb(27 58 50 / 9%);
+		}
+
+		* { box-sizing: border-box; }
+
+		body {
+			min-width: 320px;
+			min-height: 100vh;
+			margin: 0;
+			color: var(--ink);
+			background:
+				radial-gradient(ellipse at 8% 4%, rgb(255 255 255 / 76%), transparent 32rem),
+				var(--wash);
+			font-family: "Trebuchet MS", "Segoe UI", sans-serif;
+		}
+
+		button, input { font: inherit; }
+
+		button { color: inherit; }
+
+		.page {
+			width: min(100% - 40px, 920px);
+			margin: 0 auto;
+			padding: 44px 0 60px;
+		}
+
+		.topbar {
+			display: flex;
+			align-items: center;
+			justify-content: space-between;
+			margin-bottom: 54px;
+		}
+
+		.brand {
+			display: inline-flex;
+			align-items: center;
+			gap: 10px;
+			font-size: 15px;
+			font-weight: 800;
+			letter-spacing: 0.04em;
+		}
+
+		.brand-mark {
+			display: grid;
+			width: 30px;
+			height: 30px;
+			place-items: center;
+			border-radius: 9px;
+			color: white;
+			background: var(--ink);
+			font-size: 16px;
+		}
+
+		.date-label {
+			color: var(--muted);
+			font-size: 13px;
+			font-weight: 700;
+		}
+
+		.intro {
+			display: flex;
+			align-items: end;
+			justify-content: space-between;
+			gap: 24px;
+			margin-bottom: 30px;
+		}
+
+		.eyebrow {
+			margin: 0 0 9px;
+			color: var(--accent-dark);
+			font-size: 11px;
+			font-weight: 800;
+			letter-spacing: 0.12em;
+			text-transform: uppercase;
+		}
+
+		h1 {
+			margin: 0;
+			font-family: Georgia, "Times New Roman", serif;
+			font-size: clamp(36px, 7vw, 58px);
+			font-weight: 500;
+			line-height: 1.04;
+		}
+
+		.progress-note {
+			margin: 0 0 5px;
+			color: var(--muted);
+			font-size: 14px;
+			text-align: right;
+		}
+
+		.progress-note strong { color: var(--ink); }
+
+		.list-panel {
+			overflow: hidden;
+			border: 1px solid rgb(24 59 53 / 7%);
+			border-radius: 12px;
+			background: var(--paper);
+			box-shadow: var(--shadow);
+		}
+
+		.entry-form {
+			display: flex;
+			gap: 12px;
+			padding: 20px;
+			border-bottom: 1px solid var(--line);
+		}
+
+		.entry-input {
+			width: 100%;
+			min-width: 0;
+			height: 48px;
+			padding: 0 15px;
+			border: 1px solid var(--line);
+			border-radius: 7px;
+			outline: none;
+			color: var(--ink);
+			background: #fbfdfc;
+			transition: border-color 150ms ease, box-shadow 150ms ease;
+		}
+
+		.entry-input::placeholder { color: #98a7a2; }
+
+		.entry-input:focus {
+			border-color: #74a493;
+			box-shadow: 0 0 0 3px rgb(116 164 147 / 18%);
+		}
+
+		.add-button {
+			display: inline-flex;
+			flex: 0 0 auto;
+			align-items: center;
+			justify-content: center;
+			gap: 9px;
+			min-width: 120px;
+			height: 48px;
+			padding: 0 17px;
+			border: 0;
+			border-radius: 7px;
+			color: white;
+			background: var(--accent);
+			cursor: pointer;
+			font-size: 14px;
+			font-weight: 800;
+			transition: background 150ms ease, transform 150ms ease;
+		}
+
+		.add-button:hover { background: var(--accent-dark); }
+		.add-button:active { transform: translateY(1px); }
+
+		.toolbar {
+			display: flex;
+			align-items: center;
+			justify-content: space-between;
+			gap: 16px;
+			padding: 14px 20px;
+			border-bottom: 1px solid var(--line);
+		}
+
+		.filters {
+			display: inline-flex;
+			gap: 3px;
+			padding: 3px;
+			border-radius: 8px;
+			background: #f1f6f3;
+		}
+
+		.filter-button {
+			min-height: 32px;
+			padding: 0 12px;
+			border: 0;
+			border-radius: 6px;
+			color: var(--muted);
+			background: transparent;
+			cursor: pointer;
+			font-size: 12px;
+			font-weight: 700;
+		}
+
+		.filter-button[aria-pressed="true"] {
+			color: var(--ink);
+			background: white;
+			box-shadow: 0 1px 3px rgb(24 59 53 / 10%);
+		}
+
+		.clear-button {
+			padding: 7px 0 7px 8px;
+			border: 0;
+			color: var(--muted);
+			background: transparent;
+			cursor: pointer;
+			font-size: 12px;
+			font-weight: 700;
+		}
+
+		.clear-button:hover:not(:disabled) { color: var(--accent-dark); }
+		.clear-button:disabled { cursor: default; opacity: 0.45; }
+
+		.task-list {
+			min-height: 112px;
+			margin: 0;
+			padding: 0 20px;
+			list-style: none;
+		}
+
+		.task-row {
+			display: flex;
+			align-items: center;
+			gap: 13px;
+			min-height: 66px;
+			border-bottom: 1px solid #edf2ef;
+			animation: arrive 220ms ease both;
+		}
+
+		.task-row:last-child { border-bottom: 0; }
+
+		.task-check {
+			width: 21px;
+			height: 21px;
+			flex: 0 0 auto;
+			margin: 0;
+			appearance: none;
+			border: 1.5px solid #bacac3;
+			border-radius: 50%;
+			background: white;
+			cursor: pointer;
+			transition: background 150ms ease, border-color 150ms ease;
+		}
+
+		.task-check:checked {
+			border-color: var(--ink);
+			background-color: var(--ink);
+			background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 16 16'%3E%3Cpath d='m3.5 8 3 3 6-6' fill='none' stroke='white' stroke-width='1.8' stroke-linecap='round' stroke-linejoin='round'/%3E%3C/svg%3E");
+			background-position: center;
+			background-repeat: no-repeat;
+			background-size: 13px;
+		}
+
+		.task-check:focus-visible, button:focus-visible {
+			outline: 3px solid rgb(228 110 77 / 35%);
+			outline-offset: 2px;
+		}
+
+		.task-text {
+			flex: 1;
+			min-width: 0;
+			overflow-wrap: anywhere;
+			font-size: 15px;
+			line-height: 1.45;
+		}
+
+		.task-row.is-complete .task-text {
+			color: #98a7a2;
+			text-decoration: line-through;
+			text-decoration-thickness: 1px;
+		}
+
+		.delete-button {
+			display: grid;
+			width: 34px;
+			height: 34px;
+			flex: 0 0 auto;
+			place-items: center;
+			border: 0;
+			border-radius: 6px;
+			color: #9aa9a4;
+			background: transparent;
+			cursor: pointer;
+			font-size: 22px;
+			line-height: 1;
+		}
+
+		.delete-button:hover { color: var(--accent-dark); background: #fff2ed; }
+
+		.empty-state {
+			display: grid;
+			min-height: 150px;
+			place-content: center;
+			gap: 7px;
+			color: var(--muted);
+			text-align: center;
+		}
+
+		.empty-state strong {
+			color: var(--ink);
+			font-family: Georgia, "Times New Roman", serif;
+			font-size: 20px;
+			font-weight: 500;
+		}
+
+		.empty-state span { font-size: 13px; }
+
+		.footer-note {
+			margin: 17px 2px 0;
+			color: #82928c;
+			font-size: 12px;
+		}
+
+		.status-message {
+			min-height: 18px;
+			margin: 9px 2px 0;
+			color: var(--accent-dark);
+			font-size: 12px;
+		}
+
+		@keyframes arrive {
+			from { opacity: 0; transform: translateY(5px); }
+			to { opacity: 1; transform: translateY(0); }
+		}
+
+		@media (max-width: 560px) {
+			.page { width: min(100% - 28px, 440px); padding-top: 25px; }
+			.topbar { margin-bottom: 43px; }
+			.intro { align-items: start; flex-direction: column; gap: 10px; }
+			.progress-note { text-align: left; }
+			.entry-form { gap: 8px; padding: 14px; }
+			.add-button { min-width: 48px; padding: 0 13px; }
+			.add-label { display: none; }
+			.toolbar { padding: 12px 14px; }
+			.filter-button { padding: 0 10px; }
+			.task-list { padding: 0 14px; }
+		}
+
+		@media (prefers-reduced-motion: reduce) {
+			*, *::before, *::after { scroll-behavior: auto !important; animation-duration: 0.01ms !important; transition-duration: 0.01ms !important; }
+		}
+	</style>
+</head>
+<body>
+	<main class="page">
+		<header class="topbar">
+			<div class="brand"><span class="brand-mark" aria-hidden="true">✓</span> DAYMARK</div>
+			<time class="date-label" id="today-label"></time>
+		</header>
+
+		<section aria-labelledby="page-title">
+			<div class="intro">
+				<div>
+					<p class="eyebrow">One thing at a time</p>
+					<h1 id="page-title">Today's list</h1>
+				</div>
+				<p class="progress-note" id="progress-note" aria-live="polite"></p>
+			</div>
+
+			<div class="list-panel">
+				<form class="entry-form" id="task-form">
+					<label for="task-input" class="visually-hidden">New task</label>
+					<input class="entry-input" id="task-input" name="task" type="text" maxlength="240" placeholder="What needs doing?" autocomplete="off" required>
+					<button class="add-button" type="submit"><span aria-hidden="true">＋</span><span class="add-label">Add task</span></button>
+				</form>
+
+				<div class="toolbar">
+					<div class="filters" role="group" aria-label="Filter tasks">
+						<button class="filter-button" type="button" data-filter="all" aria-pressed="true">All</button>
+						<button class="filter-button" type="button" data-filter="active" aria-pressed="false">Active</button>
+						<button class="filter-button" type="button" data-filter="completed" aria-pressed="false">Done</button>
+					</div>
+					<button class="clear-button" id="clear-completed" type="button" disabled>Clear done</button>
+				</div>
+
+				<ul class="task-list" id="task-list" aria-label="Tasks"></ul>
+			</div>
+			<p class="footer-note">Your list is saved on this device.</p>
+			<p class="status-message" id="status-message" role="status" aria-live="polite"></p>
+		</section>
+	</main>
+
+	<script>
+		(() => {
+			const storageKey = "daymark.tasks.v1";
+			const taskForm = document.querySelector("#task-form");
+			const taskInput = document.querySelector("#task-input");
+			const taskList = document.querySelector("#task-list");
+			const clearButton = document.querySelector("#clear-completed");
+			const progressNote = document.querySelector("#progress-note");
+			const statusMessage = document.querySelector("#status-message");
+			const filterButtons = [...document.querySelectorAll("[data-filter]")];
+			let activeFilter = "all";
+			let tasks = loadTasks();
+
+			function loadTasks() {
+				try {
+					const saved = JSON.parse(localStorage.getItem(storageKey) || "[]");
+					if (!Array.isArray(saved)) return [];
+					return saved.filter((task) =>
+						task && typeof task.id === "string" && typeof task.text === "string" && typeof task.completed === "boolean"
+					);
+				} catch {
+					statusMessage.textContent = "Saved tasks could not be read in this browser.";
+					return [];
+				}
+			}
+
+			function saveTasks() {
+				try {
+					localStorage.setItem(storageKey, JSON.stringify(tasks));
+					statusMessage.textContent = "";
+				} catch {
+					statusMessage.textContent = "Couldn't save changes. Check this browser's storage settings.";
+				}
+			}
+
+			function render() {
+				const completedCount = tasks.filter((task) => task.completed).length;
+				const remainingCount = tasks.length - completedCount;
+				progressNote.innerHTML = `<strong>${remainingCount}</strong> ${remainingCount === 1 ? "task" : "tasks"} left`;
+				clearButton.disabled = completedCount === 0;
+				taskList.replaceChildren();
+
+				const visibleTasks = tasks.filter((task) => {
+					if (activeFilter === "active") return !task.completed;
+					if (activeFilter === "completed") return task.completed;
+					return true;
+				});
+
+				if (visibleTasks.length === 0) {
+					const emptyItem = document.createElement("li");
+					emptyItem.className = "empty-state";
+					const title = document.createElement("strong");
+					const detail = document.createElement("span");
+					if (tasks.length === 0) {
+						title.textContent = "A fresh start.";
+						detail.textContent = "Add a task to get your list going.";
+					} else if (activeFilter === "active") {
+						title.textContent = "All caught up.";
+						detail.textContent = "Nothing left on your active list.";
+					} else {
+						title.textContent = "Nothing done just yet.";
+						detail.textContent = "Finished tasks will show up here.";
+					}
+					emptyItem.append(title, detail);
+					taskList.append(emptyItem);
+					return;
+				}
+
+				for (const task of visibleTasks) {
+					const row = document.createElement("li");
+					row.className = `task-row${task.completed ? " is-complete" : ""}`;
+
+					const checkbox = document.createElement("input");
+					checkbox.className = "task-check";
+					checkbox.type = "checkbox";
+					checkbox.checked = task.completed;
+					checkbox.setAttribute("aria-label", `Mark ${task.text} ${task.completed ? "active" : "done"}`);
+					checkbox.addEventListener("change", () => {
+						task.completed = checkbox.checked;
+						saveTasks();
+						render();
+					});
+
+					const text = document.createElement("span");
+					text.className = "task-text";
+					text.textContent = task.text;
+
+					const deleteButton = document.createElement("button");
+					deleteButton.className = "delete-button";
+					deleteButton.type = "button";
+					deleteButton.textContent = "×";
+					deleteButton.title = `Delete ${task.text}`;
+					deleteButton.setAttribute("aria-label", `Delete ${task.text}`);
+					deleteButton.addEventListener("click", () => {
+						tasks = tasks.filter((item) => item.id !== task.id);
+						saveTasks();
+						render();
+					});
+
+					row.append(checkbox, text, deleteButton);
+					taskList.append(row);
+				}
+			}
+
+			taskForm.addEventListener("submit", (event) => {
+				event.preventDefault();
+				const text = taskInput.value.trim();
+				if (!text) return;
+				tasks.unshift({ id: crypto.randomUUID(), text, completed: false });
+				taskInput.value = "";
+				activeFilter = "all";
+				filterButtons.forEach((button) => button.setAttribute("aria-pressed", String(button.dataset.filter === activeFilter)));
+				saveTasks();
+				render();
+				taskInput.focus();
+			});
+
+			filterButtons.forEach((button) => {
+				button.addEventListener("click", () => {
+					activeFilter = button.dataset.filter;
+					filterButtons.forEach((filterButton) => {
+						filterButton.setAttribute("aria-pressed", String(filterButton === button));
+					});
+					render();
+				});
+			});
+
+			clearButton.addEventListener("click", () => {
+				tasks = tasks.filter((task) => !task.completed);
+				saveTasks();
+				render();
+			});
+
+			const today = new Date();
+			document.querySelector("#today-label").textContent = new Intl.DateTimeFormat(undefined, {
+				weekday: "long", month: "long", day: "numeric"
+			}).format(today);
+			document.querySelector("#today-label").dateTime = today.toISOString().slice(0, 10);
+			render();
+		})();
+	</script>
+
+	<style>
+		.visually-hidden {
+			position: absolute;
+			width: 1px;
+			height: 1px;
+			padding: 0;
+			overflow: hidden;
+			clip: rect(0, 0, 0, 0);
+			white-space: nowrap;
+			border: 0;
+		}
+	</style>
+</body>
+</html>
